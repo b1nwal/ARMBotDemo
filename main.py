@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 
 pygame.init()
 drag = False
@@ -9,6 +10,7 @@ dragpoint = (0,0)
 deltaX,deltaY = 0,0
 w, h = pygame.display.get_surface().get_size()
 running = True
+targetpoint = (200,300)
 
 
 gridimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\grid.png").convert()
@@ -63,14 +65,19 @@ class EPICConga(Object):
             self.line.insert(0,self.line.pop(-1))
             self.line[0].y = self.line[1].y - (self.a)
             
-        
+class ArmSegment(Object):
+    def __init__(self,x,y,colour,a,rad):
+        super().__init__(x,y,colour)
+        self.rad = np.deg2rad(rad) * -1
+        self.a = a
+        self.endpoint = (self.x+(self.a*np.cos(self.rad)),self.y+(self.a*np.sin(self.rad)))
+    def draw(self):
+        pygame.draw.line(root, self.colour, (self.x,self.y), self.endpoint,width=30)
+        self.endpoint = (self.x+(self.a*np.cos(self.rad)),self.y+(self.a*np.sin(self.rad)))
 
-# george = Square(10,10,150,[3, 83, 164])
-# paul = Square(400,75,175,[185, 214, 242])
-# jeff = Conga(0,0,gridimg)
-# petunia = Conga(0,-1000,gridimg)
 PJGP = EPICConga(0,0,gridimg)
-bes = Square(400,400,100,[185,214,242])
+a0 = ArmSegment(400,400,[185, 214, 242],200,45) # i am legitimately retarded REPLACE 45 with value A
+a1 = ArmSegment(a0.endpoint[0],a0.endpoint[1],[185, 214, 242],200,90) # REPLACE 90 with value B
 
 while running: # main loop
     for event in pygame.event.get():
@@ -89,6 +96,7 @@ while running: # main loop
     root.fill("#061A40")
     for i in uniobj:
         i.draw()
+    pygame.draw.circle() # TODO Continue building this
     pygame.display.flip()
     clock.tick(60)
 pygame.quit()
