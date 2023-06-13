@@ -2,6 +2,7 @@ import pygame
 import numpy as np
 import serial
 import time 
+import threading
 
 pygame.init()
 drag = False
@@ -35,7 +36,7 @@ port='COM3'
 print("Attempting to connect on port", port)
 
 try:
-    com = serial.Serial(port)
+    com = serial.Serial(port,rate=115200)
 except serial.SerialException:
     print("Port unreachable.")
     exit()
@@ -44,14 +45,27 @@ class Motor:
     def __init__(self, ID):
         self.state = 0
         self.ID = ID
-        write(self) # calibrate
+        self.write() # calibrate
     def rotate(self, angle):
         self.state = angle
-        write(self)
+        self.write()
+    def write(self):
+        com.write('w {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.state).encode('utf-8'))
 
-def write(motor: Motor):
-    com.write('w {ID} {ANGLE}'.format(ID=motor.ID,ANGLE=motor.state).encode('utf-8'))
-
+class Stepper:
+    def __init__(self,ID):
+        self.state = 0
+        self.ID = ID
+        self.queue = 0;
+    def rotate(self, angle):
+        self.state = angle
+        self.queue = self.calculate_delta(angle)
+        self.write()
+    def write(self):
+        com.write('s {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.queue))
+        self.queue = 0
+    def calculate_delta(self, desired_angle):
+        return desired_angle - self.state
 m0 = Motor(0)
 m1 = Motor(1)
 
@@ -167,11 +181,16 @@ def calculateAngles(a,b,x,y):
     C = np.pi - np.arccos((a**2 + b**2 - c**2)/(2*a*b)) + B
     return B,C
 
+def move_motors(angle1,angle2):
+    m0.rotate(angle1)
+    time.sleep(2)
+    m1.rotate(angle2)
 
 while running: # main loop
     for event in pygame.event.get():
         keys = pygame.key.get_pressed()
         if event.type == pygame.QUIT:
+            com.close() # definitely need to be releasing the COM port LMAO
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             mpos = pygame.mouse.get_pos()
@@ -207,10 +226,8 @@ while running: # main loop
                 arm.arad = B
                 arm.brad = C
                 target.updatepos() 
-                print(np.degrees(B)+90,np.degrees(C-B)+90) 
-                m0.rotate(np.degrees(B)+90) # Try to make async?
-                time.sleep(10)
-                m1.rotate(np.degrees(C-B)+90)
+                serial_thread = threading.Thread(target=move_motors,args=(np.degrees(B)+90,np.degrees(C-B)+90))
+                serial_thread.start()   
             elif mode == "paint":
                 paint = True
         if event.type == pygame.MOUSEBUTTONUP:
