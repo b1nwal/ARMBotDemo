@@ -1,5 +1,6 @@
 import pygame
 import numpy as np
+import serial
 
 pygame.init()
 drag = False
@@ -27,6 +28,31 @@ pointimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBot
 paintimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\paint.png").convert()
 closeimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\close.png").convert()
 uniobj = []
+
+# port='COM4'
+
+# print("Attempting to connect on port", port)
+
+# try:
+#     com = serial.Serial(port)
+# except serial.SerialException:
+#     print("Port unreachable.")
+#     exit()
+
+# class Motor:
+#     def __init__(self, ID):
+#         self.state = 0
+#         self.ID = ID
+#         write(self) # calibrate
+#     def rotate(self, angle):
+#         self.state = angle
+#         write(self)
+
+# def write(motor: Motor):
+#     com.write('w {ID} {ANGLE}'.format(ID=motor.ID,ANGLE=motor.state).encode('utf-8'))
+
+# m0 = Motor(0)
+# m1 = Motor(1)
 
 class Object:
     def __init__(self,x,y,colour):
@@ -177,10 +203,10 @@ while running: # main loop
                     targetpoint[0] = ctargetpoint[0] + centrepoint[0] - originoffset[0]
                     targetpoint[1] = ctargetpoint[1] + centrepoint[1] - originoffset[1]
                 B,C = calculateAngles(seg1,seg2,-ctargetpoint[0],-ctargetpoint[1])
-                print(np.degrees(B),np.degrees(C))
                 arm.arad = B
                 arm.brad = C
                 target.updatepos()  
+                print(np.degrees(B),np.degrees(C-B)+90) # REPLACE with Serial Communication Code
             elif mode == "paint":
                 paint = True
         if event.type == pygame.MOUSEBUTTONUP:
