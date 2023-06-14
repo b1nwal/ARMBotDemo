@@ -20,18 +20,18 @@ mode = "drag"
 l_ts = 0
 tss = [l_ts]
 
-seg1 = 400
+seg1 = 300
 seg2 = 300
 reach = seg1+seg2
 
-gridimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\grid.png").convert()
-moveimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\move.png").convert()
-pointimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\point.png").convert()
-paintimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\paint.png").convert()
-closeimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\close.png").convert()
+gridimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\grid.png").convert()
+moveimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\move.png").convert()
+pointimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\point.png").convert()
+paintimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\paint.png").convert()
+closeimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\close.png").convert()
 uniobj = []
 
-port='COM4'
+port='COM6'
 
 print("Attempting to connect on port", port)
 
@@ -56,18 +56,18 @@ class Stepper:
     def __init__(self,ID):
         self.state = 0
         self.ID = ID
-        self.queue = 0;
+        self.queue = 0
     def rotate(self, angle):
-        self.state = angle
         self.queue = self.calculate_delta(angle)
+        self.state = angle
         self.write()
     def write(self):
-        com.write('s {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.queue))
+        com.write('s {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.queue).encode('utf-8'))
         self.queue = 0
     def calculate_delta(self, desired_angle):
         return desired_angle - self.state
-m0 = Motor(0)
-m1 = Motor(1)
+m0 = Stepper(0)
+m1 = Motor(0)
 
 class Object:
     def __init__(self,x,y,colour):
@@ -226,7 +226,10 @@ while running: # main loop
                 arm.arad = B
                 arm.brad = C
                 target.updatepos() 
-                serial_thread = threading.Thread(target=move_motors,args=(np.degrees(B)+90,np.degrees(C-B)+90))
+                sB = round(90-np.degrees(-B))
+                sC = 180-round(np.degrees(C-B)+90)
+                print(sC)
+                serial_thread = threading.Thread(target=move_motors,args=(sB,sC))
                 serial_thread.start()   
             elif mode == "paint":
                 paint = True
@@ -241,6 +244,7 @@ while running: # main loop
             if keys[pygame.K_LCTRL] and keys[pygame.K_z]:
                 if tss[-1] > 0:
                     uniobj = uniobj[:-tss.pop(-1)]
+                print(tss)
     if paint == True:
         PaintPoint(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
         roundline(pygame.mouse.get_pos(), prev_point)
