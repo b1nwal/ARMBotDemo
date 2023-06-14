@@ -29,6 +29,8 @@ moveimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotD
 pointimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\point.png").convert()
 paintimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\paint.png").convert()
 closeimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\close.png").convert()
+rotaterimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\rotate_r.png").convert()
+rotatelimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\rotate_l.png").convert()
 uniobj = []
 
 port='COM6'
@@ -49,7 +51,7 @@ class Motor:
     def rotate(self, angle):
         self.state = angle
         self.write()
-    def write(self):
+    def write(self): # not for direct access shithead GO THROUGH THE ROTATE() PROXY
         com.write('w {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.state).encode('utf-8'))
 
 class Stepper:
@@ -61,13 +63,14 @@ class Stepper:
         self.queue = self.calculate_delta(angle)
         self.state = angle
         self.write()
-    def write(self):
+    def write(self): # not for direct access shithead GO THROUGH THE ROTATE() PROXY
         com.write('s {ID} {ANGLE}'.format(ID=self.ID,ANGLE=self.queue).encode('utf-8'))
         self.queue = 0
     def calculate_delta(self, desired_angle):
         return desired_angle - self.state
 m0 = Stepper(0)
 m1 = Motor(0)
+BRM = Motor(1)
 
 class Object:
     def __init__(self,x,y,colour):
@@ -153,7 +156,7 @@ class OriginPoint(Object):
     def __init__(self,x,y):
         super().__init__(x,y,[0,0,0])
     def draw(self):
-        pass # dont draw the origin point
+        pass # dont draw the origin point, but all classes that inherit from Object MUST implement a draw() function
 
 origin = OriginPoint(centrepoint[0],centrepoint[1])
 PJGP = EPICConga(0,0,gridimg)
@@ -186,6 +189,23 @@ def move_motors(angle1,angle2):
     time.sleep(5)
     m1.rotate(angle2)
 
+dragmodebutton_border = pygame.Rect(20,20,80,80)
+placemodebutton_border = pygame.Rect(20, 120, 80, 80)
+paintmodebutton_border = pygame.Rect(20,220,80,80)
+closemodebutton_border = pygame.Rect(20,320,80,80)
+rotaterbutton_border = pygame.Rect(20,h-100,80,80)
+rotatelbutton_border = pygame.Rect(120,h-100,80,80)
+
+test_var = 0
+
+def rotatebase(direction):
+    if direction == 1:
+        BRM.rotate(100)
+    else:
+        BRM.rotate(77) # just trying shit out with this number, don't know why 80 is so slow
+    time.sleep(1.15)
+    BRM.rotate(88) # stop code (for some reason, is usually 90???)
+
 while running: # main loop
     for event in pygame.event.get():
         keys = pygame.key.get_pressed()
@@ -205,6 +225,14 @@ while running: # main loop
                 continue
             elif checkCollision(mpos[0], mpos[1], closemodebutton_border):
                 running = False
+                continue
+            elif checkCollision(mpos[0], mpos[1], rotaterbutton_border):
+                rotatethread = threading.Thread(target=rotatebase,args=(1,))
+                rotatethread.start()
+                continue
+            elif checkCollision(mpos[0], mpos[1], rotatelbutton_border):
+                rotatethread = threading.Thread(target=rotatebase,args=(-1,))
+                rotatethread.start()
                 continue
             if mode == "drag":
                 drag = True
@@ -237,7 +265,8 @@ while running: # main loop
             if mode == "drag":
                 drag = False
             if mode == "paint":
-                tss.append(l_ts)
+                if l_ts > 0:
+                    tss.append(l_ts)
                 l_ts = 0
                 paint = False
         if event.type == pygame.KEYDOWN:
@@ -257,18 +286,18 @@ while running: # main loop
     root.fill("#061A40")
     for i in uniobj:
         i.draw()
-    dragmodebutton_border = pygame.Rect(20,20,80,80)
-    placemodebutton_border = pygame.Rect(20, 120, 80, 80)
-    paintmodebutton_border = pygame.Rect(20,220,80,80)
-    closemodebutton_border = pygame.Rect(20,320,80,80)
     root.blit(moveimg, (25,25))
     root.blit(pointimg, (25,125))
     root.blit(paintimg, (25,225))
     root.blit(closeimg, (25,325))
+    root.blit(rotaterimg, (25,rotaterbutton_border.y+5))
+    root.blit(rotatelimg, (125, rotatelbutton_border.y+5))
     pygame.draw.rect(root, [185, 214, 242], dragmodebutton_border, 5,2)
     pygame.draw.rect(root, [185, 214, 242], placemodebutton_border, 5,2)
     pygame.draw.rect(root, [185, 214, 242], paintmodebutton_border, 5,2)
     pygame.draw.rect(root, [185, 214, 242], closemodebutton_border, 5,2)
+    pygame.draw.rect(root, [185, 214, 242], rotaterbutton_border, 5,2)
+    pygame.draw.rect(root, [185, 214, 242], rotatelbutton_border, 5,2)
     pygame.display.flip()
     clock.tick(60)
 pygame.quit()
