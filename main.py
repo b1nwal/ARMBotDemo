@@ -24,19 +24,19 @@ seg1 = 400
 seg2 = 300
 reach = seg1+seg2
 
-gridimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\grid.png").convert()
-moveimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\move.png").convert()
-pointimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\point.png").convert()
-paintimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\paint.png").convert()
-closeimg = pygame.image.load("C:\\Users\\Reilley Pfrimmer\\source\\repos\\ARMBotDemo\\close.png").convert()
+gridimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\grid.png").convert()
+moveimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\move.png").convert()
+pointimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\point.png").convert()
+paintimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\paint.png").convert()
+closeimg = pygame.image.load("C:\\Users\\136-rpfrimmer\\repos\\ARMBotDemo\\close.png").convert()
 uniobj = []
 
-port='COM3'
+port='COM4'
 
 print("Attempting to connect on port", port)
 
 try:
-    com = serial.Serial(port,rate=115200)
+    com = serial.Serial(port,baudrate=115200)
 except serial.SerialException:
     print("Port unreachable.")
     exit()
@@ -183,7 +183,7 @@ def calculateAngles(a,b,x,y):
 
 def move_motors(angle1,angle2):
     m0.rotate(angle1)
-    time.sleep(2)
+    time.sleep(5)
     m1.rotate(angle2)
 
 while running: # main loop
